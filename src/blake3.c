@@ -1,7 +1,10 @@
 #include <openssl/core.h>
 #include <openssl/core_dispatch.h>
+#include <openssl/core_names.h>
 #include <openssl/crypto.h>
+#include <openssl/err.h>
 #include <openssl/params.h>
+#include <stdio.h>
 
 #define BLAKE3_DEFAULT_LEN (32)
 #define BLAKE3_MAX_BYTES (64)
@@ -20,7 +23,7 @@ static void *blake3_newctx(void *vctx)
 
 	if (ctx != NULL) {
 		ctx->prov = vctx;
-		ctx->prov = BLAKE3_DEFAULT_LEN;
+		ctx->out_len = BLAKE3_DEFAULT_LEN;
 	}
 
 	return ctx;
@@ -90,7 +93,7 @@ static const OSSL_PARAM *blake3_settable_ctx_params(void)
 	return blake3_mutable_ctx_params;
 }
 
-static int blake3_get_ctx_params(void *vctx, , OSSL_PARAM params[])
+static int blake3_get_ctx_params(void *vctx, OSSL_PARAM params[])
 {
 	struct blake3_ctx *ctx = vctx;
 	OSSL_PARAM *p;
@@ -113,7 +116,8 @@ static int blake3_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 		if (!OSSL_PARAM_get_size_t(p, &size)
 			|| size < 1
 			|| size > BLAKE3_MAX_BYTES) {
-			ERR_raise(ERR_LIB_PROV, PROV_R_NOT_XOF_OR_INVALID_LENGTH);
+			//ERR_raise(ERR_LIB_PROV, PROV_R_NOT_XOF_OR_INVALID_LENGTH);
+			printf("PROV_R_NOT_XOF_OR_INVALID_LENGTH\n");
 			return 0;
 		}
 
