@@ -14,13 +14,22 @@ Building
 
 Create a separate build tree:
 
-    $ mkdir output && cd build
+    $ mkdir output && cd output
     $ cmake ../ && make
 
 Running Tests
 =============
 
-...
+..
+
+Installation
+============
+
+Run the installation script with:
+
+    $ sudo make install
+
+You can set the installation directory for the modules by setting the OPENSSL_MODULES_DIR environment variable before running CMake.
 
 License
 =======
