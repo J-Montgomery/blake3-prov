@@ -8,35 +8,37 @@ int main()
 	OPENSSL_CTX *ctx;
 	OSSL_PROVIDER *prov = NULL;
 	EVP_MD *md = NULL;
-	int res = 0;
+	int ret = 0;
 
 	ctx = OPENSSL_CTX_new();
 	if (!ctx) {
 		ERR_print_errors_fp(stderr);
-		return 1;
+		ret = 1;
+		goto exit;
 	}
 
 	prov = OSSL_PROVIDER_load(ctx, "blake3");
 	if (!prov) {
 		ERR_print_errors_fp(stderr);
-
-		OPENSSL_CTX_free(ctx);
-		return 1;
+		ret = 1;
+		goto free_ctx;
 	}
 
 	md = EVP_MD_fetch(ctx, "blake3", NULL);
 	if (!md) {
 		ERR_print_errors_fp(stderr);
-
-		OSSL_PROVIDER_unload(prov);
-		OPENSSL_CTX_free(ctx);
-		return 1;
+		ret = 1;
+		goto prov_unload;
 	}
 
-	EVP_MD_free(md);
-	OSSL_PROVIDER_unload(prov);
-	OPENSSL_CTX_free(ctx);
-
 	printf("Success!\n");
-	return 0;
+
+md_free:
+	EVP_MD_free(md);
+prov_unload:
+	OSSL_PROVIDER_unload(prov);
+free_ctx:
+	OPENSSL_CTX_free(ctx);
+exit:
+	return ret;
 }
