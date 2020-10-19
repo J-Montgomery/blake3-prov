@@ -8,3 +8,6 @@ endfunction()
 
 add_executable(test_fetch test_fetch.c)
 create_test_case("test_fetch")
+
+add_executable(test_digest_simple test_digest_simple.c)
+create_test_case("test_digest_simple")

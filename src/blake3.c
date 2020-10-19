@@ -1,10 +1,12 @@
+#include <stdio.h>
+#include <string.h>
+
 #include <openssl/core.h>
 #include <openssl/core_dispatch.h>
 #include <openssl/core_names.h>
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/params.h>
-#include <stdio.h>
 
 #define BLAKE3_DEFAULT_LEN (32)
 #define BLAKE3_MAX_BYTES (64)
@@ -68,35 +70,59 @@ int blake3_digest_update(void *vctx, const unsigned char *in, size_t inl)
 }
 
 int blake3_digest_final(void *vctx, unsigned char *out, size_t *outl,
-				 size_t outsz)
+			size_t outsz)
 {
 	struct blake3_ctx *ctx = vctx;
-	*out = 0;
+	fprintf(stderr, "bytes %lu\n", outsz);
+
+	*outl = outsz;
+	if (outsz != 0)
+		memset(out, 0xFF, outsz);
 
 	return 1;
 }
 
 // clang-format off
-static const OSSL_PARAM blake3_mutable_ctx_params[] = {
+static const OSSL_PARAM blake3_mutable_params[] = {
 		OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_SIZE, NULL),
 		OSSL_PARAM_END
 };
 // clang-format on
 
+static const OSSL_PARAM *blake3_gettable_params(void)
+{
+	return blake3_mutable_params;
+}
+
+static int blake3_get_params(void *vctx, OSSL_PARAM params[])
+{
+	OSSL_PARAM *p;
+
+	if ((p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_SIZE)) != NULL) {
+		return OSSL_PARAM_set_size_t(p, BLAKE3_DEFAULT_LEN);
+	}
+
+	return 1;
+}
+
 static const OSSL_PARAM *blake3_gettable_ctx_params(void)
 {
-	return blake3_mutable_ctx_params;
+	fprintf(stderr, "%s\n", __func__);
+	return blake3_mutable_params;
 }
 
 static const OSSL_PARAM *blake3_settable_ctx_params(void)
 {
-	return blake3_mutable_ctx_params;
+	fprintf(stderr, "%s\n", __func__);
+	return blake3_mutable_params;
 }
 
 static int blake3_get_ctx_params(void *vctx, OSSL_PARAM params[])
 {
 	struct blake3_ctx *ctx = vctx;
 	OSSL_PARAM *p;
+
+	fprintf(stderr, "%s\n", __func__);
 
 	if ((p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_SIZE)) != NULL) {
 		return OSSL_PARAM_set_size_t(p, ctx->out_len);
@@ -110,14 +136,15 @@ static int blake3_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 	struct blake3_ctx *ctx = vctx;
 	const OSSL_PARAM *p;
 
-	if ((p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_SIZE)) != NULL) {
+	fprintf(stderr, "%s\n", __func__);
+
+	if ((p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_SIZE)) !=
+	    NULL) {
 		size_t size;
 
-		if (!OSSL_PARAM_get_size_t(p, &size)
-			|| size < 1
-			|| size > BLAKE3_MAX_BYTES) {
-			//ERR_raise(ERR_LIB_PROV, PROV_R_NOT_XOF_OR_INVALID_LENGTH);
-			printf("PROV_R_NOT_XOF_OR_INVALID_LENGTH\n");
+		if (!OSSL_PARAM_get_size_t(p, &size) || size < 1 ||
+		    size > BLAKE3_MAX_BYTES) {
+			fprintf(stderr, "PROV_R_NOT_XOF_OR_INVALID_LENGTH\n");
 			return 0;
 		}
 
@@ -135,10 +162,20 @@ static const OSSL_DISPATCH blake3_functions[] = {
 	{ OSSL_FUNC_DIGEST_INIT, (funcptr_t)blake3_digest_init },
 	{ OSSL_FUNC_DIGEST_UPDATE, (funcptr_t)blake3_digest_update },
 	{ OSSL_FUNC_DIGEST_FINAL, (funcptr_t)blake3_digest_final },
+	{ OSSL_FUNC_DIGEST_GET_PARAMS, (funcptr_t)blake3_get_params },
+	{ OSSL_FUNC_DIGEST_GETTABLE_PARAMS, (funcptr_t)blake3_gettable_params },
 	{ OSSL_FUNC_DIGEST_GET_CTX_PARAMS, (funcptr_t)blake3_get_ctx_params },
 	{ OSSL_FUNC_DIGEST_SET_CTX_PARAMS, (funcptr_t)blake3_set_ctx_params },
 	{ OSSL_FUNC_DIGEST_GETTABLE_CTX_PARAMS, (funcptr_t)blake3_gettable_ctx_params },
 	{ OSSL_FUNC_DIGEST_SETTABLE_CTX_PARAMS, (funcptr_t)blake3_settable_ctx_params },
+	/* OpenSSL doesn't support DIGEST_SET_PARAMS, but BLAKE3 can adjust the
+	 * output length when finalize is called. This should be implemented
+	 * with *_SET_PARAMS. Instead, we have to overload the CTX_PARAMS APIs,
+	 * which aren't called automatically.
+	 *
+	 * { OSSL_FUNC_DIGEST_SET_PARAMS, (funcptr_t)blake3_set_params },
+	 * { OSSL_FUNC_DIGEST_SETTABLE_PARAMS, (funcptr_t)blake3_settable_params },
+	 */
 	{ 0, NULL }
 };
 
@@ -149,7 +186,7 @@ static const OSSL_ALGORITHM blake3_digests[] = {
 
 /* The function that returns the appropriate algorithm table per operation */
 static const OSSL_ALGORITHM *blake3_operation(void *vprovctx, int operation_id,
-						  int *no_cache)
+					      int *no_cache)
 {
 	*no_cache = 0;
 	switch (operation_id) {
@@ -166,7 +203,7 @@ static const OSSL_DISPATCH provider_functions[] = {
 };
 
 int OSSL_provider_init(const OSSL_CORE_HANDLE *handle, const OSSL_DISPATCH *in,
-			   const OSSL_DISPATCH **out, void **provctx)
+		       const OSSL_DISPATCH **out, void **provctx)
 {
 	*out = provider_functions;
 	*provctx = (void *)handle;
