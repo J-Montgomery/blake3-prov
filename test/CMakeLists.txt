@@ -6,11 +6,11 @@ function(create_test_case TEST_NAME)
         PROPERTIES ENVIRONMENT "OPENSSL_MODULES=${CMAKE_BINARY_DIR}")
 endfunction()
 
-add_executable(test_fetch test_fetch.c)
+add_executable(test_fetch fetch.c)
 create_test_case("test_fetch")
 
-add_executable(test_digest_simple test_digest_simple.c)
+add_executable(test_digest_simple digest_simple.c)
 create_test_case("test_digest_simple")
 
-add_executable(test_varying_len test_varying_len.c)
-create_test_case("test_varying_len")
+add_executable(test_vary_input_len vary_input_len.c)
+create_test_case("test_vary_input_len")

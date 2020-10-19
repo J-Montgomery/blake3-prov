@@ -5,12 +5,22 @@ enable_language(C ASM)
 set(BLAKE3_COMPILE_OPTS "-O3" "-march=native" "-fPIC")
 
 # The only relevant flag CMake exposes here is SSE2
-cmake_host_system_information(RESULT BLAKE3_ENABLE_SSE QUERY HAS_SSE2)
+if(NOT DEFINED BLAKE3_ENABLE_SSE)
+    cmake_host_system_information(RESULT BLAKE3_ENABLE_SSE QUERY HAS_SSE2)
+endif()
 
-# For everything else, these are good defaults with the current marketshare
-set(BLAKE3_ENABLE_AVX2 1)
-set(BLAKE3_ENABLE_AVX512 0)
-set(BLAKE3_ENABLE_NEON 0)
+# For everything else, these are good defaults
+if(NOT DEFINED BLAKE3_ENABLE_AVX2)
+    set(BLAKE3_ENABLE_AVX2 1)
+endif()
+
+if(NOT DEFINED BLAKE3_ENABLE_AVX512)
+    set(BLAKE3_ENABLE_AVX512 0)
+endif()
+
+if(NOT DEFINED BLAKE3_ENABLE_NEON)
+    set(BLAKE3_ENABLE_NEON 0)
+endif()
 
 set(BLAKE3_SOURCES
     blake3.c

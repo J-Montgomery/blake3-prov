@@ -3,7 +3,9 @@ project(blake3-provider LANGUAGES C)
 
 enable_testing()
 
-set(TEST_LDFLAGS "-fsanitize=address")
+if(DEFINED ENABLE_ASAN)
+    set(TEST_LDFLAGS "-fsanitize=address")
+endif()
 
 find_package(OpenSSL 3.0 REQUIRED)
 include_directories(${OPENSSL_INCLUDE_DIR})
