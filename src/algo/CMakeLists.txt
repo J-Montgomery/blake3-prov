@@ -23,7 +23,6 @@ set(BLAKE3_HEADERS
     blake3_impl.h
 )
 
-
 if(BLAKE3_ENABLE_SSE)
     set(BLAKE3_SOURCES ${BLAKE3_SOURCES}
         blake3_sse2.c
@@ -57,6 +56,7 @@ if(BLAKE3_ENABLE_NEON)
     set(BLAKE3_SOURCES ${BLAKE3_SOURCES} blake3_neon.c)
     add_definitions(-DBLAKE3_USE_NEON)
 endif()
+
 
 add_compile_options(${BLAKE3_COMPILE_OPTS})
 add_library(blake3-algo STATIC ${BLAKE3_SOURCES})

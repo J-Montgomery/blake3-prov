@@ -79,7 +79,6 @@ int blake3_digest_final(void *vctx, unsigned char *out, size_t *outl,
 			size_t outsz)
 {
 	struct blake3_ctx *ctx = vctx;
-	fprintf(stderr, "bytes %lu\n", outsz);
 
 	*outl = outsz;
 	if (outsz != 0)
