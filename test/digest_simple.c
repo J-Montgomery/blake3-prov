@@ -39,7 +39,7 @@ int run_test(EVP_MD_CTX *ctx, OSSL_PROVIDER *prov, EVP_MD *md)
 	TEST_TRUE(EVP_DigestFinal_ex(ctx, out, NULL));
 
 	for (int i = 0; i < sizeof(expected); i++) {
-		if(out[i] != expected[i]) {
+		if (out[i] != expected[i]) {
 			fprintf(stderr, "Output doesn't match input\n");
 			free(out);
 			return 1;
