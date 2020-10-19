@@ -8,6 +8,8 @@
 #include <openssl/err.h>
 #include <openssl/params.h>
 
+#include "algo/blake3.h"
+
 #define BLAKE3_DEFAULT_LEN (32)
 #define BLAKE3_MAX_BYTES (64)
 
@@ -17,6 +19,7 @@ typedef void (*funcptr_t)(void);
 struct blake3_ctx {
 	void *prov;
 	size_t out_len;
+	blake3_hasher md;
 };
 
 static void *blake3_newctx(void *vctx)
@@ -59,6 +62,8 @@ int blake3_digest_init(void *vctx)
 {
 	struct blake3_ctx *ctx = vctx;
 
+	blake3_hasher_init(&ctx->md);
+
 	return 1;
 }
 
@@ -66,6 +71,7 @@ int blake3_digest_update(void *vctx, const unsigned char *in, size_t inl)
 {
 	struct blake3_ctx *ctx = vctx;
 
+	blake3_hasher_update(&ctx->md, in, inl);
 	return 1;
 }
 
@@ -77,7 +83,7 @@ int blake3_digest_final(void *vctx, unsigned char *out, size_t *outl,
 
 	*outl = outsz;
 	if (outsz != 0)
-		memset(out, 0xFF, outsz);
+		blake3_hasher_finalize(&ctx->md, out, outsz);
 
 	return 1;
 }

@@ -6,7 +6,7 @@ This is a BLAKE3 provider implementation for OpenSSL, intended to provide access
 Dependencies
 ========
  - OpenSSL 3.0 or greater
- - CMake 3.0 or greater
+ - CMake 3.10 or greater
 
 
 Building

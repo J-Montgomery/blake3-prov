@@ -9,13 +9,15 @@ function(find_openssl_modules_dir DIR_PATH)
     set(${DIR_PATH} ${PROVIDER_INSTALL_DIR} PARENT_SCOPE)
 endfunction()
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_subdirectory(algo)
 
 # Create the provider target
 add_library(blake3 MODULE blake3-prov.c)
 set_target_properties(blake3 PROPERTIES PREFIX ""
                              OUTPUT_NAME "blake3")
-target_link_libraries(blake3 ${OPENSSL_CRYPTO_LIBRARY})
+target_link_libraries(blake3 blake3-algo ${OPENSSL_CRYPTO_LIBRARY})
 
 # Install provider into OpenSSL modules directory if available
 find_openssl_modules_dir(OPENSSL_PROV_INSTALL_DIR)
