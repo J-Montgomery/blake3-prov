@@ -12,7 +12,7 @@ endfunction()
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR})
 
 # Create the provider target
-add_library(blake3 MODULE blake3.c)
+add_library(blake3 MODULE blake3-prov.c)
 set_target_properties(blake3 PROPERTIES PREFIX ""
                              OUTPUT_NAME "blake3")
 target_link_libraries(blake3 ${OPENSSL_CRYPTO_LIBRARY})

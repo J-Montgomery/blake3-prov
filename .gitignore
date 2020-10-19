@@ -13,3 +13,4 @@ _deps
 *.dll
 
 output/
+.vscode/
