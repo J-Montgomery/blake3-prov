@@ -11,3 +11,6 @@ create_test_case("test_fetch")
 
 add_executable(test_digest_simple test_digest_simple.c)
 create_test_case("test_digest_simple")
+
+add_executable(test_varying_len test_varying_len.c)
+create_test_case("test_varying_len")
