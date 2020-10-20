@@ -28,7 +28,7 @@ static void *blake3_newctx(void *vctx)
 
 	if (ctx != NULL) {
 		ctx->prov = vctx;
-		ctx->out_len = BLAKE3_DEFAULT_LEN;
+		ctx->out_len = 0;
 	}
 
 	return ctx;
@@ -80,6 +80,9 @@ int blake3_digest_final(void *vctx, unsigned char *out, size_t *outl,
 {
 	struct blake3_ctx *ctx = vctx;
 
+	if(ctx->out_len)
+		outsz = ctx->out_len;
+
 	*outl = outsz;
 	if (outsz != 0)
 		blake3_hasher_finalize(&ctx->md, out, outsz);
@@ -88,15 +91,20 @@ int blake3_digest_final(void *vctx, unsigned char *out, size_t *outl,
 }
 
 // clang-format off
-static const OSSL_PARAM blake3_mutable_params[] = {
+static const OSSL_PARAM blake3_params[] = {
 		OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_SIZE, NULL),
+		OSSL_PARAM_END
+};
+
+static const OSSL_PARAM blake3_mutable_ctx_params[] = {
+		OSSL_PARAM_size_t(OSSL_DIGEST_PARAM_XOFLEN, NULL),
 		OSSL_PARAM_END
 };
 // clang-format on
 
 static const OSSL_PARAM *blake3_gettable_params(void)
 {
-	return blake3_mutable_params;
+	return blake3_params;
 }
 
 static int blake3_get_params(void *vctx, OSSL_PARAM params[])
@@ -112,14 +120,12 @@ static int blake3_get_params(void *vctx, OSSL_PARAM params[])
 
 static const OSSL_PARAM *blake3_gettable_ctx_params(void)
 {
-	fprintf(stderr, "%s\n", __func__);
-	return blake3_mutable_params;
+	return blake3_mutable_ctx_params;
 }
 
 static const OSSL_PARAM *blake3_settable_ctx_params(void)
 {
-	fprintf(stderr, "%s\n", __func__);
-	return blake3_mutable_params;
+	return blake3_mutable_ctx_params;
 }
 
 static int blake3_get_ctx_params(void *vctx, OSSL_PARAM params[])
@@ -127,9 +133,7 @@ static int blake3_get_ctx_params(void *vctx, OSSL_PARAM params[])
 	struct blake3_ctx *ctx = vctx;
 	OSSL_PARAM *p;
 
-	fprintf(stderr, "%s\n", __func__);
-
-	if ((p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_SIZE)) != NULL) {
+	if ((p = OSSL_PARAM_locate(params, OSSL_DIGEST_PARAM_XOFLEN)) != NULL) {
 		return OSSL_PARAM_set_size_t(p, ctx->out_len);
 	}
 
@@ -141,15 +145,11 @@ static int blake3_set_ctx_params(void *vctx, const OSSL_PARAM params[])
 	struct blake3_ctx *ctx = vctx;
 	const OSSL_PARAM *p;
 
-	fprintf(stderr, "%s\n", __func__);
-
-	if ((p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_SIZE)) !=
-	    NULL) {
+	if (ctx != NULL && params != NULL) {
 		size_t size;
-
-		if (!OSSL_PARAM_get_size_t(p, &size) || size < 1 ||
-		    size > BLAKE3_MAX_BYTES) {
-			fprintf(stderr, "PROV_R_NOT_XOF_OR_INVALID_LENGTH\n");
+		p = OSSL_PARAM_locate_const(params, OSSL_DIGEST_PARAM_XOFLEN);
+		if (p != NULL && !OSSL_PARAM_get_size_t(p, &size)) {
+			fprintf(stderr, "Failed to get XOF length\n");
 			return 0;
 		}
 
@@ -173,14 +173,6 @@ static const OSSL_DISPATCH blake3_functions[] = {
 	{ OSSL_FUNC_DIGEST_SET_CTX_PARAMS, (funcptr_t)blake3_set_ctx_params },
 	{ OSSL_FUNC_DIGEST_GETTABLE_CTX_PARAMS, (funcptr_t)blake3_gettable_ctx_params },
 	{ OSSL_FUNC_DIGEST_SETTABLE_CTX_PARAMS, (funcptr_t)blake3_settable_ctx_params },
-	/* OpenSSL doesn't support DIGEST_SET_PARAMS, but BLAKE3 can adjust the
-	 * output length when finalize is called. This should be implemented
-	 * with *_SET_PARAMS. Instead, we have to overload the CTX_PARAMS APIs,
-	 * which aren't called automatically.
-	 *
-	 * { OSSL_FUNC_DIGEST_SET_PARAMS, (funcptr_t)blake3_set_params },
-	 * { OSSL_FUNC_DIGEST_SETTABLE_PARAMS, (funcptr_t)blake3_settable_params },
-	 */
 	{ 0, NULL }
 };
 

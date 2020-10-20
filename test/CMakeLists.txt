@@ -14,3 +14,6 @@ create_test_case("test_digest_simple")
 
 add_executable(test_vary_input_len vary_input_len.c)
 create_test_case("test_vary_input_len")
+
+add_executable(test_vary_output_len vary_output_len.c)
+create_test_case("test_vary_output_len")
