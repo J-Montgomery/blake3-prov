@@ -94,13 +94,13 @@ int run_test(struct test_ctx context, struct test_vector vec, char *test_name)
 
 int main()
 {
-	OPENSSL_CTX *ctx;
+	OSSL_LIB_CTX *ctx;
 	OSSL_PROVIDER *prov = NULL;
 	EVP_MD *md = NULL;
 	EVP_MD_CTX *md_ctx;
 	int ret = 0;
 
-	NON_NULL((ctx = OPENSSL_CTX_new()), ret = 1; goto exit);
+	NON_NULL((ctx = OSSL_LIB_CTX_new()), ret = 1; goto exit);
 	NON_NULL((prov = OSSL_PROVIDER_load(ctx, "blake3")), ret = 1;
 		 goto free_ctx);
 	NON_NULL((md = EVP_MD_fetch(ctx, "blake3", NULL)), ret = 1;
@@ -262,7 +262,7 @@ free_md:
 prov_unload:
 	OSSL_PROVIDER_unload(prov);
 free_ctx:
-	OPENSSL_CTX_free(ctx);
+	OSSL_LIB_CTX_free(ctx);
 exit:
 	return ret;
 }
