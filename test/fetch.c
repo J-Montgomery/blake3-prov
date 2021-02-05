@@ -5,12 +5,12 @@
 
 int main()
 {
-	OPENSSL_CTX *ctx;
+	OSSL_LIB_CTX *ctx;
 	OSSL_PROVIDER *prov = NULL;
 	EVP_MD *md = NULL;
 	int ret = 0;
 
-	ctx = OPENSSL_CTX_new();
+	ctx = OSSL_LIB_CTX_new();
 	if (!ctx) {
 		ERR_print_errors_fp(stderr);
 		ret = 1;
@@ -38,7 +38,7 @@ md_free:
 prov_unload:
 	OSSL_PROVIDER_unload(prov);
 free_ctx:
-	OPENSSL_CTX_free(ctx);
+	OSSL_LIB_CTX_free(ctx);
 exit:
 	return ret;
 }
